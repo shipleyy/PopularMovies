@@ -103,8 +103,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
   }
 
   // Refresh the list with current data
-  public void refreshMovies(ArrayList<Movie> movies) {
-    movie.clear();
+  public void addAll(ArrayList<Movie> movies) {
     movie.addAll(movies);
     notifyDataSetChanged();
   }

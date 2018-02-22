@@ -104,7 +104,8 @@ public class MainActivity extends AppCompatActivity implements
 
   @Override
   public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
-    mAdapter.refreshMovies(data);
+    mAdapter.clear();
+    mAdapter.addAll(data);
   }
 
   @Override
@@ -132,7 +133,8 @@ public class MainActivity extends AppCompatActivity implements
 
   private void setupSharedPreferences() {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    movie_sort_pref = sharedPreferences.getString(getString(R.string.pref_list_sort), "settings_sort_entry_values");
+    movie_sort_pref = sharedPreferences.getString(getResources().getString(R.string.pref_list_sort), "popular");
+    Log.i(LOG_TAG, "current value of movie_sort_pref: " + movie_sort_pref);
     sharedPreferences.registerOnSharedPreferenceChangeListener(this);
   }
 

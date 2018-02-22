@@ -12,6 +12,7 @@ public class MovieLoader extends android.content.AsyncTaskLoader<ArrayList<Movie
   public MovieLoader(Context context, String url) {
     super(context);
     apiUrl = url;
+    onContentChanged();
   }
 
   @Override
@@ -20,5 +21,16 @@ public class MovieLoader extends android.content.AsyncTaskLoader<ArrayList<Movie
       return null;
     }
     return FetchApiData.getMovieData(getContext(), apiUrl);
+  }
+
+  @Override
+  protected void onStartLoading() {
+    if (takeContentChanged())
+      forceLoad();
+  }
+
+  @Override
+  protected void onStopLoading() {
+    cancelLoad();
   }
 }

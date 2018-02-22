@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements
 
   private void setupSharedPreferences() {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    movie_sort_pref = sharedPreferences.getString("sort_order", "settings_sort_entry_values");
+    movie_sort_pref = sharedPreferences.getString(getString(R.string.pref_list_sort), "settings_sort_entry_values");
     sharedPreferences.registerOnSharedPreferenceChangeListener(this);
   }
 

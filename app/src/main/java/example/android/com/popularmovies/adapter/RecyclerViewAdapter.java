@@ -42,7 +42,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     final Movie ni = movie.get(position);
 
     // Add the static start URL to the specific URL for each movie
-    Picasso.with(mContext).load(ni.getMoviePoster()).into(holder.moviePosterIv);
+    Picasso.with(mContext).load(ni.getMoviePoster())
+        .placeholder(R.drawable.poster_placeholder)
+        .error(R.drawable.poster_placeholder)
+        .into(holder.moviePosterIv);
     // Get the movie title and add it to the TextView
     String newMovieTitle = ni.getMovieTitle();
     holder.movieNameTv.setText(newMovieTitle);

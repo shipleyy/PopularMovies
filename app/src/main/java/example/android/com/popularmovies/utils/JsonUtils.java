@@ -1,12 +1,8 @@
 package example.android.com.popularmovies.utils;
 
-import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
-import example.android.com.popularmovies.data.FetchApiData;
-import example.android.com.popularmovies.data.MovieLoader;
 import example.android.com.popularmovies.model.Movie;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,7 +48,7 @@ public class JsonUtils {
         String moviePoster = f.getString(MOVIE_KEY_POSTER_PATH);
         String movieDescription = f.getString(MOVIE_KEY_OVERVIEW);
         String movieOriginalTitle = f.getString(MOVIE_KEY_ORIGINAL_TITLE);
-        Float movieRating = BigDecimal.valueOf(f.getDouble(MOVIE_KEY_VOTE_AVERAGE)).floatValue();
+        Double movieRating = f.getDouble(MOVIE_KEY_VOTE_AVERAGE);
         String movieReleaseDate = f.getString(MOVIE_KEY_RELEASE_DATE);
 
         // Save the data in the Movie class

@@ -18,7 +18,7 @@ public class FetchApiData {
 
   private static final String LOG_TAG = FetchApiData.class.getName();
 
-  public FetchApiData() {
+  private FetchApiData() {
   }
 
   public static ArrayList<Movie> getMovieData(Context context, String requestUrl) {

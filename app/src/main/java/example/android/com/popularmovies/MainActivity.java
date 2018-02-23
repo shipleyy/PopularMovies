@@ -8,11 +8,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,9 +24,9 @@ import example.android.com.popularmovies.model.Movie;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
-    RecyclerViewAdapter.ItemClickListener, LoaderManager.LoaderCallbacks<ArrayList<Movie>>, SharedPreferences.OnSharedPreferenceChangeListener {
+    RecyclerViewAdapter.ItemClickListener, LoaderManager.LoaderCallbacks<ArrayList<Movie>>,
+    SharedPreferences.OnSharedPreferenceChangeListener {
 
-  private static final String LOG_TAG = MainActivity.class.getName();
   // The loader ID
   private static final int MOVIE_LOADER_ID = 1;
   // The first part of the API URL
@@ -41,8 +39,12 @@ public class MainActivity extends AppCompatActivity implements
   private static final String API_KEY = BuildConfig.API_KEY;
   // The complete API URL unique for each query
   private String apiUrl;
+  // The sorting preference chosen from settings
   private String movie_sort_pref;
+  // The RecyclerViewAdapter for the RecyclerView
   private RecyclerViewAdapter mAdapter;
+  // The ArrayList of Movie objects in use
+  ArrayList<Movie> movieList;
 
   @BindView(R.id.recyclerView)
   RecyclerView recyclerView;
@@ -56,8 +58,9 @@ public class MainActivity extends AppCompatActivity implements
     // Setting up the RecyclerView
     int numberOfColumns = 4;
     recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+    movieList = new ArrayList<>();
     // Setting up the adapter
-    mAdapter = new RecyclerViewAdapter(this, new ArrayList<Movie>());
+    mAdapter = new RecyclerViewAdapter(this, movieList);
     mAdapter.setClickListener(this);
 
     // Connecting the adapter to the RecyclerView
@@ -77,9 +80,12 @@ public class MainActivity extends AppCompatActivity implements
       // Use LoaderManager to make sure AsyncTask is not recreated if activity is stopped
       final LoaderManager loaderManager = getLoaderManager();
 
-      if (movie_sort_pref.equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
+      // Check which preference is used for sorting the movies
+      if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
         apiUrl = API_QUERY_START + API_QUERY_POPULAR + API_KEY;
-      } else if (movie_sort_pref.equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
+      } else if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
         apiUrl = API_QUERY_START + API_QUERY_TOP_RATED + API_KEY;
       }
       // Start loading the information in a background task
@@ -91,17 +97,22 @@ public class MainActivity extends AppCompatActivity implements
     }
   }
 
-  // TODO create new details_activity and start intent onItemClick
+  // Handle clicks on each cell in the RecyclerView to go to the DetailsActivity
   @Override
   public void onItemClick(View view, int position) {
+    Intent startDetailsActivity = new Intent(this, DetailsActivity.class);
+    startDetailsActivity.putExtra("movieDetails", movieList.get(position));
 
+    startActivity(startDetailsActivity);
   }
 
+  // Using the loader to get API data in a background thread.
   @Override
   public Loader<ArrayList<Movie>> onCreateLoader(int i, Bundle bundle) {
     return new MovieLoader(this, apiUrl);
   }
 
+  // When data is loaded, make sure previous data is removed, and add new data to the adapter
   @Override
   public void onLoadFinished(Loader<ArrayList<Movie>> loader, ArrayList<Movie> data) {
     mAdapter.clear();
@@ -113,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements
     mAdapter.clear();
   }
 
+  // Creating the options menu
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     MenuInflater menuInflater = getMenuInflater();
@@ -120,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements
     return true;
   }
 
+  // Handle the click on the settings option
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
@@ -131,29 +144,37 @@ public class MainActivity extends AppCompatActivity implements
     return super.onOptionsItemSelected(item);
   }
 
+  // Getting the sharedPreferences and registering the OnSharedPreferenceListener
+  // to register preference changes
   private void setupSharedPreferences() {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    movie_sort_pref = sharedPreferences.getString(getResources().getString(R.string.pref_list_sort), "popular");
-    Log.i(LOG_TAG, "current value of movie_sort_pref: " + movie_sort_pref);
+    movie_sort_pref = sharedPreferences
+        .getString(getResources().getString(R.string.pref_list_sort), "popular");
     sharedPreferences.registerOnSharedPreferenceChangeListener(this);
   }
 
+  // Update the RecyclerView with new data if the preferences are changed
   @Override
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-    if(s.equals(getString(R.string.pref_list_sort))) {
-      movie_sort_pref = sharedPreferences.getString(getString(R.string.pref_list_sort), "settings_sort_entry_values");
-      if (movie_sort_pref.equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
+    if (s.equals(getString(R.string.pref_list_sort))) {
+      movie_sort_pref = sharedPreferences
+          .getString(getString(R.string.pref_list_sort), "settings_sort_entry_values");
+      if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
         apiUrl = API_QUERY_START + API_QUERY_POPULAR + API_KEY;
-      } else if (movie_sort_pref.equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
+      } else if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
         apiUrl = API_QUERY_START + API_QUERY_TOP_RATED + API_KEY;
       }
       getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
     }
   }
 
+  // Remember to unregister the OnSharedPreferenceChangeListener
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
+    PreferenceManager.getDefaultSharedPreferences(this)
+        .unregisterOnSharedPreferenceChangeListener(this);
   }
 }

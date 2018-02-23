@@ -15,7 +15,8 @@
     android:layout_marginEnd="8dp"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"/>
+    app:layout_constraintTop_toTopOf="parent"
+    android:contentDescription="@string/details_poster_content_desc"/>
   <TextView
     android:id="@+id/movie_name"
     android:textStyle="bold"

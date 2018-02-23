@@ -15,12 +15,9 @@ import java.util.ArrayList;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
-  private static final String LOG_TAG = RecyclerViewAdapter.class.getName();
-
   private ItemClickListener mClickListener;
   private final ArrayList<Movie> movie;
   private Context mContext;
-  private static final String API_MOVIE_POSTER_START = "http://image.tmdb.org/t/p/w185";
 
   // Data is passed into the constructor
   public RecyclerViewAdapter(Context context, @NonNull ArrayList<Movie> movie) {
@@ -45,8 +42,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     final Movie ni = movie.get(position);
 
     // Add the static start URL to the specific URL for each movie
-    String newMoviePoster = API_MOVIE_POSTER_START + ni.getMoviePoster();
-    Picasso.with(mContext).load(newMoviePoster).into(holder.moviePosterIv);
+    Picasso.with(mContext).load(ni.getMoviePoster()).into(holder.moviePosterIv);
     // Get the movie title and add it to the TextView
     String newMovieTitle = ni.getMovieTitle();
     holder.movieNameTv.setText(newMovieTitle);

@@ -9,4 +9,16 @@
     <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
   </style>
 
+  <style name="DetailsLabels">
+    <item name="android:textSize">18sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:layout_marginTop">16dp</item>
+    <item name="android:layout_marginStart">16dp</item>
+  </style>
+
+  <style name="DetailsText">
+    <item name="android:layout_marginEnd">8dp</item>
+    <item name="android:textSize">18sp</item>
+  </style>
+
 </resources>

@@ -1,6 +1,5 @@
 package example.android.com.popularmovies.data;
 
-import android.content.Context;
 import android.util.Log;
 import example.android.com.popularmovies.model.Movie;
 import example.android.com.popularmovies.utils.JsonUtils;
@@ -21,7 +20,7 @@ public class FetchApiData {
   private FetchApiData() {
   }
 
-  public static ArrayList<Movie> getMovieData(Context context, String requestUrl) {
+  public static ArrayList<Movie> getMovieData(String requestUrl) {
     // Creating the URL from the String received
     URL url = createUrl(requestUrl);
 
@@ -107,4 +106,8 @@ public class FetchApiData {
     }
     return output.toString();
   }
+
+
+
+
 }

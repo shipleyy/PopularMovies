@@ -13,12 +13,14 @@ public class JsonUtils {
   private static final String LOG_TAG = JsonUtils.class.getName();
 
   // themoviedb.org API keys for the necessary information
+  public static final String MOVIE_KEY_RESULTS = "results";
   private static final String MOVIE_KEY_TITLE = "title";
   private static final String MOVIE_KEY_POSTER_PATH = "poster_path";
   private static final String MOVIE_KEY_OVERVIEW = "overview";
   private static final String MOVIE_KEY_ORIGINAL_TITLE = "original_title";
   private static final String MOVIE_KEY_VOTE_AVERAGE = "vote_average";
   private static final String MOVIE_KEY_RELEASE_DATE = "release_date";
+  private static final String MOVIE_KEY_ID = "id";
 
   public static ArrayList<Movie> parseMovies(String jsonResponse) {
     // If the JSON string is empty or null, then return early.
@@ -38,9 +40,9 @@ public class JsonUtils {
       JSONObject root = new JSONObject(jsonResponse);
 
       // results array represents a list of movies
-      JSONArray results = root.getJSONArray("results");
+      JSONArray results = root.getJSONArray(MOVIE_KEY_RESULTS);
 
-      // For each movie in the array, create an {@link Movie} object
+      // For each movie in the array, create a {@link Movie} object
       for (int i = 0; i < results.length(); i++) {
         JSONObject f = results.getJSONObject(i);
 
@@ -50,10 +52,11 @@ public class JsonUtils {
         String movieOriginalTitle = f.getString(MOVIE_KEY_ORIGINAL_TITLE);
         Double movieRating = f.getDouble(MOVIE_KEY_VOTE_AVERAGE);
         String movieReleaseDate = f.getString(MOVIE_KEY_RELEASE_DATE);
+        int movieId = f.getInt(MOVIE_KEY_ID);
 
         // Save the data in the Movie class
         Movie newMovie = new Movie(movieTitle, movieDescription, moviePoster, movieRating,
-            movieOriginalTitle, movieReleaseDate);
+            movieOriginalTitle, movieReleaseDate, movieId);
 
         // Add the new movie to the ArrayList
         movies.add(newMovie);

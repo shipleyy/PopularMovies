@@ -2,33 +2,16 @@
 <android.support.constraint.ConstraintLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
-  xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="wrap_content">
 
   <ImageView
     android:id="@+id/movie_poster"
     android:layout_width="0dp"
-    android:layout_height="100dp"
-    android:layout_marginTop="8dp"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
+    android:layout_height="277dp"
+    android:contentDescription="@string/details_poster_content_desc"
+    android:scaleType="fitXY"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
-    android:contentDescription="@string/details_poster_content_desc"/>
-  <TextView
-    android:id="@+id/movie_name"
-    android:textStyle="bold"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:textAlignment="center"
-    android:textSize="14sp"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@id/movie_poster"
-    tools:text="Movie Name"/>
+    app:layout_constraintTop_toTopOf="parent"/>
 </android.support.constraint.ConstraintLayout>

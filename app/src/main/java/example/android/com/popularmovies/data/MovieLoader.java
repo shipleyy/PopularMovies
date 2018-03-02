@@ -1,7 +1,6 @@
 package example.android.com.popularmovies.data;
 
 import android.content.Context;
-import android.util.Log;
 import example.android.com.popularmovies.model.Movie;
 import java.util.ArrayList;
 
@@ -20,7 +19,7 @@ public class MovieLoader extends android.content.AsyncTaskLoader<ArrayList<Movie
     if (apiUrl == null) {
       return null;
     }
-    return FetchApiData.getMovieData(getContext(), apiUrl);
+    return FetchApiData.getMovieData(apiUrl);
   }
 
   @Override

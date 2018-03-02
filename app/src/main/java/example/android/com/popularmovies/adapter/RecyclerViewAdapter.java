@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 import example.android.com.popularmovies.R;
 import example.android.com.popularmovies.model.Movie;
@@ -46,9 +45,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         .placeholder(R.drawable.poster_placeholder)
         .error(R.drawable.poster_placeholder)
         .into(holder.moviePosterIv);
-    // Get the movie title and add it to the TextView
-    String newMovieTitle = ni.getMovieTitle();
-    holder.movieNameTv.setText(newMovieTitle);
   }
 
   // Total number of cells
@@ -61,12 +57,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
   public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     ImageView moviePosterIv;
-    TextView movieNameTv;
 
     public ViewHolder(View itemView) {
       super(itemView);
-      moviePosterIv = (ImageView) itemView.findViewById(R.id.movie_poster);
-      movieNameTv = (TextView) itemView.findViewById(R.id.movie_name);
+      moviePosterIv = itemView.findViewById(R.id.movie_poster);
       itemView.setOnClickListener(this);
     }
 
@@ -76,11 +70,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         mClickListener.onItemClick(view, getAdapterPosition());
       }
     }
-  }
-
-  // Convenience method for getting data at click position
-  Movie getItem(int id) {
-    return movie.get(id);
   }
 
   // allows clicks events to be caught

@@ -8,21 +8,17 @@ public class Movie implements Parcelable {
   private String movieTitle, movieDescription, moviePoster, movieOriginalTitle, movieReleaseDate;
   private Double movieRating;
   private static final String API_MOVIE_POSTER_START = "http://image.tmdb.org/t/p/w185";
-
-  /**
-   * No args constructor for use in serialization
-   */
-  public Movie() {
-  }
+  private int movieId;
 
   public Movie(String movieTitle, String movieDescription, String moviePoster,
-      Double movieRating, String movieOriginalTitle, String movieReleaseDate) {
+      Double movieRating, String movieOriginalTitle, String movieReleaseDate, int movieId) {
     this.movieTitle = movieTitle;
     this.movieDescription = movieDescription;
     this.moviePoster = moviePoster;
     this.movieRating = movieRating;
     this.movieOriginalTitle = movieOriginalTitle;
     this.movieReleaseDate = movieReleaseDate;
+    this.movieId = movieId;
   }
 
   protected Movie(Parcel in) {
@@ -35,6 +31,11 @@ public class Movie implements Parcelable {
       movieRating = null;
     } else {
       movieRating = in.readDouble();
+    }
+    if (in.readByte() == 0) {
+      movieId = 0;
+    } else {
+      movieId = in.readInt();
     }
   }
 
@@ -54,36 +55,16 @@ public class Movie implements Parcelable {
     return movieTitle;
   }
 
-  public void setMovieTitle(String movieTitle) {
-    this.movieTitle = movieTitle;
-  }
-
   public String getMovieDescription() {
     return movieDescription;
-  }
-
-  public void setMovieDescription(String movieDescription) {
-    this.movieDescription = movieDescription;
   }
 
   public String getMoviePoster() {
     return API_MOVIE_POSTER_START + moviePoster;
   }
 
-  public void setMoviePoster(String moviePoster) {
-    this.moviePoster = moviePoster;
-  }
-
   public Double getMovieRating() {
     return movieRating;
-  }
-
-  public void setMovieRating(Double movieRating) {
-    this.movieRating = movieRating;
-  }
-
-  public void setMovieOriginalTitle(String movieOriginalTitle) {
-    this.movieOriginalTitle = movieOriginalTitle;
   }
 
   public String getMovieOriginalTitle() {
@@ -94,8 +75,8 @@ public class Movie implements Parcelable {
     return movieReleaseDate;
   }
 
-  public void setMovieReleaseDate(String movieReleaseDate) {
-    this.movieReleaseDate = movieReleaseDate;
+  public int getMovieId() {
+    return movieId;
   }
 
   @Override
@@ -116,6 +97,12 @@ public class Movie implements Parcelable {
     } else {
       parcel.writeByte((byte) 1);
       parcel.writeDouble(movieRating);
+    }
+    if (movieId == 0) {
+      parcel.writeByte((byte) 0);
+    } else {
+      parcel.writeByte((byte) 1);
+      parcel.writeInt(movieId);
     }
   }
 }

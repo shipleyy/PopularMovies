@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements
   // The loader ID
   private static final int MOVIE_LOADER_ID = 1;
   // The first part of the API URL
-  private static final String API_QUERY_START = "https://api.themoviedb.org/3/movie";
+  public static final String API_QUERY_START = "https://api.themoviedb.org/3/movie";
   // The URL for the popular movies query
   private static final String API_QUERY_POPULAR = "/popular?api_key=";
   // The URL end for the top rated movies query
@@ -55,8 +55,9 @@ public class MainActivity extends AppCompatActivity implements
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
+    int numberOfColumns = 2;
+
     // Setting up the RecyclerView
-    int numberOfColumns = 4;
     recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
     movieList = new ArrayList<>();
     // Setting up the adapter

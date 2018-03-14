@@ -19,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,6 +70,10 @@ public class DetailsActivity extends AppCompatActivity {
   NonScrollListView trailerListview;
   @BindView(R.id.review_listview)
   NonScrollListView reviewListview;
+  @BindView(R.id.details_scrollview)
+  ScrollView detailsScrollview;
+
+  private static final String SCROLL_POSITION = "DETAILS_SCROLL_POSITION";
 
   private int movieId;
   private static String API_TRAILER_KEY = "key";
@@ -111,6 +116,7 @@ public class DetailsActivity extends AppCompatActivity {
     // Get the movie ID from the Intent to start a new JSON query for the trailer and reviews
     movieId = selectedMovie.getMovieId();
 
+    // Request the movie data via API
     requestMovieApiData();
 
     // Setting onItemClickListener on the trailerListView to allow the user to open the trailer in

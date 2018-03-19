@@ -13,7 +13,6 @@ public final class FavoritesContract {
 
     public static final String TABLE_NAME = "favorites";
     public static final String COLUMN_TITLE = "title";
-    public static final String COLUMN_MOVIE_ID = "movieid";
     public static final String COLUMN_DESCRIPTION = "description";
     public static final String COLUMN_RATING = "rating";
     public static final String COLUMN_RELEASED = "released";

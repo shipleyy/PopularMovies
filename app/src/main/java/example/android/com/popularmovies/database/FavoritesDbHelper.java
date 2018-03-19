@@ -24,9 +24,8 @@ public class FavoritesDbHelper extends SQLiteOpenHelper {
     final String SQL_CREATE_FAVORITES_TABLE = "CREATE TABLE "
         + FavoriteEntry.TABLE_NAME
         + " ("
-        + FavoriteEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+        + FavoriteEntry._ID + " INTEGER PRIMARY KEY NOT NULL,"
         + FavoriteEntry.COLUMN_TITLE + " TEXT NOT NULL,"
-        + FavoriteEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL,"
         + FavoriteEntry.COLUMN_DESCRIPTION + " TEXT,"
         + FavoriteEntry.COLUMN_RATING + " TEXT,"
         + FavoriteEntry.COLUMN_RELEASED + " TEXT"

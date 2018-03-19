@@ -2,8 +2,11 @@ package example.android.com.popularmovies;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable.ConstantState;
 import android.net.Uri;
 import android.os.Build.VERSION;
@@ -21,6 +24,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import com.android.volley.Request.Method;
@@ -31,6 +35,9 @@ import com.android.volley.toolbox.Volley;
 import com.squareup.picasso.Picasso;
 import example.android.com.popularmovies.adapter.ListViewReviewAdapter;
 import example.android.com.popularmovies.adapter.ListViewTrailerAdapter;
+import example.android.com.popularmovies.database.FavoritesContract;
+import example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry;
+import example.android.com.popularmovies.database.FavoritesDbHelper;
 import example.android.com.popularmovies.model.Movie;
 import example.android.com.popularmovies.model.MovieReview;
 import example.android.com.popularmovies.model.MovieTrailer;
@@ -73,15 +80,31 @@ public class DetailsActivity extends AppCompatActivity {
   @BindView(R.id.details_scrollview)
   ScrollView detailsScrollview;
 
-  private static final String SCROLL_POSITION = "DETAILS_SCROLL_POSITION";
+  // Declaring database objects
+  private SQLiteDatabase mDb;
+  FavoritesDbHelper dbHelper;
 
+  // The id of the current movie
   private int movieId;
+  // The movie title
+  private String movieTitle;
+  // The movie description
+  private String movieDescription;
+  // The movie rating
+  private String movieRating;
+  // The movie release date
+  private String movieReleased;
+
+  private boolean isFavorite;
+
+  // Declaring the API constants
   private static String API_TRAILER_KEY = "key";
   private static String API_TRAILER_NAME = "name";
   private static String API_REVIEW_AUTHOR = "author";
   private static String API_REVIEW_CONTENT = "content";
   private static String API_REVIEW_URL = "url";
 
+  // Declaring the arrays used
   ArrayList<MovieTrailer> movieTrailers;
   ArrayList<MovieReview> movieReviews;
 
@@ -92,8 +115,11 @@ public class DetailsActivity extends AppCompatActivity {
     setContentView(R.layout.activity_details);
     ButterKnife.bind(this);
 
-    ActionBar actionBar = this.getSupportActionBar();
+    // Declaring and initializing the DbHelper class
+    dbHelper = new FavoritesDbHelper(this);
 
+    // Display the actionbar and show the back button
+    ActionBar actionBar = this.getSupportActionBar();
     if (actionBar != null) {
       actionBar.setDisplayHomeAsUpEnabled(true);
     }
@@ -101,17 +127,24 @@ public class DetailsActivity extends AppCompatActivity {
     // Get the selected movie from the Intent
     Movie selectedMovie = getIntent().getParcelableExtra("movieDetails");
 
+    isFavorite = false;
+
+
     final Context context = getApplicationContext();
 
     // Load the Movie values to the views
     Picasso.with(context).load(selectedMovie.getMoviePoster()).into(posterIv);
-    titleTv.setText(selectedMovie.getMovieTitle());
+    movieTitle = selectedMovie.getMovieTitle();
+    titleTv.setText(movieTitle);
     originalTitleTv.setText(selectedMovie.getMovieOriginalTitle());
-    String formattedRating = NumberFormat.getInstance()
+
+    movieRating = NumberFormat.getInstance()
         .format(selectedMovie.getMovieRating());
-    ratingTv.setText(formattedRating);
-    releaseDateTv.setText(formatReleaseDate(selectedMovie.getMovieReleaseDate()));
-    descriptionTv.setText(selectedMovie.getMovieDescription());
+    ratingTv.setText(movieRating);
+    movieReleased = selectedMovie.getMovieReleaseDate();
+    releaseDateTv.setText(formatReleaseDate(movieReleased));
+    movieDescription = selectedMovie.getMovieDescription();
+    descriptionTv.setText(movieDescription);
 
     // Get the movie ID from the Intent to start a new JSON query for the trailer and reviews
     movieId = selectedMovie.getMovieId();
@@ -151,17 +184,31 @@ public class DetailsActivity extends AppCompatActivity {
       }
     });
 
-    // TODO Save the movie data to the local database
+    // TODO Allow for the current movie to be added or removed from the database if the star is clicked
     favoriteIv.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (checkImageResource(getApplicationContext(), favoriteIv
-        )) {
+
+        // If the image is the empty star, save the current movie to the database and change the
+        // image resource to the filled out star
+        if (!isFavorite) {
+          isFavorite = true;
           favoriteIv.setImageResource(R.drawable.ic_favorite_set);
           favoriteLabelTv.setText(R.string.details_favorite_label_remove);
-        } else {
+
+          // Get a writable database and store it in the mDb variable
+          mDb = dbHelper.getWritableDatabase();
+
+          addFavoriteMovie(movieId, movieTitle, movieDescription, movieRating, movieReleased);
+        }
+
+        // If the star is the filled out star, it means the movie is already a favorite, and it
+        // needs to be removed from the database and the image changed to the empty star
+        else {
           favoriteIv.setImageResource(R.drawable.ic_favorite_not_set);
           favoriteLabelTv.setText(R.string.details_favorite_label_add);
+          isFavorite = false;
+          removeFavoriteMovie(movieId);
         }
       }
     });
@@ -189,7 +236,7 @@ public class DetailsActivity extends AppCompatActivity {
     }
     return super.onOptionsItemSelected(item);
   }
-
+/*
   @SuppressWarnings("deprecation")
   @SuppressLint("NewApi")
   public static boolean checkImageResource(Context ctx, ImageView imageView) {
@@ -206,13 +253,15 @@ public class DetailsActivity extends AppCompatActivity {
         constantState = ctx.getResources().getDrawable(R.drawable.ic_favorite_not_set)
             .getConstantState();
       }
-
       if (imageView.getDrawable().getConstantState() == constantState) {
         result = true;
       }
     }
+
+    Log.i(LOG_TAG, "checkImageResource run - Result = " + result);
     return result;
   }
+  */
 
   private void requestMovieApiData() {
 
@@ -312,5 +361,24 @@ public class DetailsActivity extends AppCompatActivity {
 
     queue.add(jsonObjectRequest);
     queue.add(jsonObjectRequest1);
+  }
+
+  private long addFavoriteMovie(int movieId, String movieTitle, String movieDescription, String movieRating, String movieReleased) {
+
+    // Create and add the current movie data to a ContentValues object
+    ContentValues cv = new ContentValues();
+    cv.put(FavoriteEntry._ID, movieId);
+    cv.put(FavoriteEntry.COLUMN_TITLE, movieTitle);
+    cv.put(FavoriteEntry.COLUMN_DESCRIPTION, movieDescription);
+    cv.put(FavoriteEntry.COLUMN_RATING, movieRating);
+    cv.put(FavoriteEntry.COLUMN_RELEASED, movieReleased);
+
+    Toast.makeText(getApplicationContext(), "Added a movie with the ID " + movieId, Toast.LENGTH_SHORT).show();
+    return mDb.insert(FavoriteEntry.TABLE_NAME, null, cv);
+  }
+
+  private boolean removeFavoriteMovie(int id){
+    Toast.makeText(getApplicationContext(), "Deleted the movie with ID " + id, Toast.LENGTH_SHORT).show();
+    return mDb.delete(FavoriteEntry.TABLE_NAME, FavoriteEntry._ID + "=" + id, null) > 0;
   }
 }

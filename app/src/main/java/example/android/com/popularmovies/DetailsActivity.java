@@ -184,7 +184,7 @@ public class DetailsActivity extends AppCompatActivity {
       }
     });
 
-    // TODO Allow for the current movie to be added or removed from the database if the star is clicked
+    // Allow for the current movie to be added or removed from the database if the star is clicked
     favoriteIv.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
@@ -236,32 +236,6 @@ public class DetailsActivity extends AppCompatActivity {
     }
     return super.onOptionsItemSelected(item);
   }
-/*
-  @SuppressWarnings("deprecation")
-  @SuppressLint("NewApi")
-  public static boolean checkImageResource(Context ctx, ImageView imageView) {
-    boolean result = false;
-
-    if (ctx != null && imageView != null && imageView.getDrawable() != null) {
-      ConstantState constantState;
-
-      if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-        constantState = ctx.getResources()
-            .getDrawable(R.drawable.ic_favorite_not_set, ctx.getTheme())
-            .getConstantState();
-      } else {
-        constantState = ctx.getResources().getDrawable(R.drawable.ic_favorite_not_set)
-            .getConstantState();
-      }
-      if (imageView.getDrawable().getConstantState() == constantState) {
-        result = true;
-      }
-    }
-
-    Log.i(LOG_TAG, "checkImageResource run - Result = " + result);
-    return result;
-  }
-  */
 
   private void requestMovieApiData() {
 

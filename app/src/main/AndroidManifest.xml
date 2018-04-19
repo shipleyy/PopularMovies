@@ -32,6 +32,13 @@
       android:parentActivityName=".MainActivity"
       android:label="@string/action_details">
     </activity>
+
+    <!-- The ContentProvider for the favorite movies -->
+    <provider
+      android:authorities="example.android.com.popularmovies"
+      android:name="example.android.com.popularmovies.data.MovieContentProvider"
+      android:exported="false"/>
+
   </application>
 
 </manifest>

@@ -19,9 +19,11 @@
   <string-array name="settings_sort_entries">
     <item>Most Popular</item>
     <item>Highest Rated</item>
+    <item>Favorites</item>
   </string-array>
   <string-array name="settings_sort_entry_values">
     <item>popular</item>
     <item>rating</item>
+    <item>favorites</item>
   </string-array>
 </resources>

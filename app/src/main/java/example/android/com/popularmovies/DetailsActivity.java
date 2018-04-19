@@ -1,16 +1,15 @@
 package example.android.com.popularmovies;
 
-import android.annotation.SuppressLint;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.*;
+
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.drawable.Drawable.ConstantState;
 import android.net.Uri;
-import android.os.Build.VERSION;
-import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
@@ -35,7 +34,6 @@ import com.android.volley.toolbox.Volley;
 import com.squareup.picasso.Picasso;
 import example.android.com.popularmovies.adapter.ListViewReviewAdapter;
 import example.android.com.popularmovies.adapter.ListViewTrailerAdapter;
-import example.android.com.popularmovies.database.FavoritesContract;
 import example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry;
 import example.android.com.popularmovies.database.FavoritesDbHelper;
 import example.android.com.popularmovies.model.Movie;
@@ -80,10 +78,6 @@ public class DetailsActivity extends AppCompatActivity {
   @BindView(R.id.details_scrollview)
   ScrollView detailsScrollview;
 
-  // Declaring database objects
-  private SQLiteDatabase mDb;
-  FavoritesDbHelper dbHelper;
-
   // The id of the current movie
   private int movieId;
   // The movie title
@@ -96,6 +90,7 @@ public class DetailsActivity extends AppCompatActivity {
   private String movieReleased;
 
   private boolean isFavorite;
+  private Cursor cursor;
 
   // Declaring the API constants
   private static String API_TRAILER_KEY = "key";
@@ -115,21 +110,10 @@ public class DetailsActivity extends AppCompatActivity {
     setContentView(R.layout.activity_details);
     ButterKnife.bind(this);
 
-    // Declaring and initializing the DbHelper class
-    dbHelper = new FavoritesDbHelper(this);
-
-    // Display the actionbar and show the back button
-    ActionBar actionBar = this.getSupportActionBar();
-    if (actionBar != null) {
-      actionBar.setDisplayHomeAsUpEnabled(true);
-    }
-
     // Get the selected movie from the Intent
     Movie selectedMovie = getIntent().getParcelableExtra("movieDetails");
 
-    isFavorite = false;
-
-
+    // Getting the context
     final Context context = getApplicationContext();
 
     // Load the Movie values to the views
@@ -137,7 +121,6 @@ public class DetailsActivity extends AppCompatActivity {
     movieTitle = selectedMovie.getMovieTitle();
     titleTv.setText(movieTitle);
     originalTitleTv.setText(selectedMovie.getMovieOriginalTitle());
-
     movieRating = NumberFormat.getInstance()
         .format(selectedMovie.getMovieRating());
     ratingTv.setText(movieRating);
@@ -146,8 +129,18 @@ public class DetailsActivity extends AppCompatActivity {
     movieDescription = selectedMovie.getMovieDescription();
     descriptionTv.setText(movieDescription);
 
+    // Display the actionbar with the movie title and show the back button
+    ActionBar actionBar = this.getSupportActionBar();
+    if (actionBar != null) {
+      actionBar.setDisplayHomeAsUpEnabled(true);
+      actionBar.setTitle(movieTitle);
+    }
+
     // Get the movie ID from the Intent to start a new JSON query for the trailer and reviews
     movieId = selectedMovie.getMovieId();
+
+    // Check if the movie id is in the database and set the UI accordingly
+    checkFavoriteStatus(movieId);
 
     // Request the movie data via API
     requestMovieApiData();
@@ -189,27 +182,21 @@ public class DetailsActivity extends AppCompatActivity {
       @Override
       public void onClick(View view) {
 
-        // If the image is the empty star, save the current movie to the database and change the
-        // image resource to the filled out star
+        // If the movie is not already in the database, insert the movie data in the database
+        // If the movie is already a favorite, delete the entry from the database
+        // Update the UI with the current favorite status
         if (!isFavorite) {
-          isFavorite = true;
+          addFavoriteMovie(movieId, movieTitle, movieDescription, movieRating, movieReleased);
           favoriteIv.setImageResource(R.drawable.ic_favorite_set);
           favoriteLabelTv.setText(R.string.details_favorite_label_remove);
-
-          // Get a writable database and store it in the mDb variable
-          mDb = dbHelper.getWritableDatabase();
-
-          addFavoriteMovie(movieId, movieTitle, movieDescription, movieRating, movieReleased);
-        }
-
-        // If the star is the filled out star, it means the movie is already a favorite, and it
-        // needs to be removed from the database and the image changed to the empty star
-        else {
+          isFavorite = true;
+        } else {
+          removeFavoriteMovie(movieId);
           favoriteIv.setImageResource(R.drawable.ic_favorite_not_set);
           favoriteLabelTv.setText(R.string.details_favorite_label_add);
           isFavorite = false;
-          removeFavoriteMovie(movieId);
         }
+        cursor.close();
       }
     });
   }
@@ -337,22 +324,68 @@ public class DetailsActivity extends AppCompatActivity {
     queue.add(jsonObjectRequest1);
   }
 
-  private long addFavoriteMovie(int movieId, String movieTitle, String movieDescription, String movieRating, String movieReleased) {
+  // Add the movie to the database
+  private void addFavoriteMovie(int movieId, String movieTitle, String movieDescription,
+      String movieRating, String movieReleased) {
 
     // Create and add the current movie data to a ContentValues object
     ContentValues cv = new ContentValues();
-    cv.put(FavoriteEntry._ID, movieId);
-    cv.put(FavoriteEntry.COLUMN_TITLE, movieTitle);
-    cv.put(FavoriteEntry.COLUMN_DESCRIPTION, movieDescription);
-    cv.put(FavoriteEntry.COLUMN_RATING, movieRating);
-    cv.put(FavoriteEntry.COLUMN_RELEASED, movieReleased);
+    cv.put(_ID, movieId);
+    cv.put(COLUMN_TITLE, movieTitle);
+    cv.put(COLUMN_DESCRIPTION, movieDescription);
+    cv.put(COLUMN_RATING, movieRating);
+    cv.put(COLUMN_RELEASED, movieReleased);
 
-    Toast.makeText(getApplicationContext(), "Added a movie with the ID " + movieId, Toast.LENGTH_SHORT).show();
-    return mDb.insert(FavoriteEntry.TABLE_NAME, null, cv);
+    // Sending the ContentValues to the ContentResolver to insert it in the database
+    Uri uri = getContentResolver().insert(CONTENT_URI, cv);
+
+    Intent returnIntent = new Intent();
+    setResult(Activity.RESULT_OK,returnIntent);
   }
 
-  private boolean removeFavoriteMovie(int id){
-    Toast.makeText(getApplicationContext(), "Deleted the movie with ID " + id, Toast.LENGTH_SHORT).show();
-    return mDb.delete(FavoriteEntry.TABLE_NAME, FavoriteEntry._ID + "=" + id, null) > 0;
+  // Remove the movie from the database
+  private void removeFavoriteMovie(int id) {
+
+    String stringId = Integer.toString(id);
+    Uri uri = FavoriteEntry.CONTENT_URI;
+    uri = uri.buildUpon().appendPath(stringId).build();
+
+    getContentResolver().delete(uri, null, null);
+
+    // Makes sure that the MainActivity knows that the favorites database was updated
+    Intent returnIntent = new Intent();
+    setResult(Activity.RESULT_OK,returnIntent);
+
+    Toast.makeText(getApplicationContext(), "Removed  " + movieTitle + " from the database", Toast.LENGTH_SHORT)
+        .show();
+  }
+
+  // Check to see if the movie id is already in the database and update UI accordingly
+  private void checkFavoriteStatus(int movieId) {
+    // Check if the current movie ID is already in the database
+    isFavorite = checkIfMovieIdExists(Integer.toString(movieId));
+
+    // Set the favorite icon and text according to the favorite status
+    if (!isFavorite) {
+      favoriteIv.setImageResource(R.drawable.ic_favorite_not_set);
+      favoriteLabelTv.setText(R.string.details_favorite_label_add);
+    } else {
+      favoriteIv.setImageResource(R.drawable.ic_favorite_set);
+      favoriteLabelTv.setText(R.string.details_favorite_label_remove);
+    }
+  }
+
+  // Check to see if the movie ID is already in the database and return true if cursor > 0
+  public boolean checkIfMovieIdExists(String movieIdString) {
+
+    Uri uri = FavoriteEntry.CONTENT_URI;
+    uri = uri.buildUpon().appendPath(movieIdString).build();
+
+    cursor = getContentResolver().query(uri, null, null, null, null);
+
+    assert cursor != null;
+    boolean exists = (cursor.getCount() > 0);
+    cursor.close();
+    return exists;
   }
 }

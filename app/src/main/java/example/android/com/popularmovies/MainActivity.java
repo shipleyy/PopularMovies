@@ -1,9 +1,17 @@
 package example.android.com.popularmovies;
 
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_DESCRIPTION;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_RATING;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_RELEASED;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_TITLE;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.CONTENT_URI;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry._ID;
+
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -11,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,6 +54,13 @@ public class MainActivity extends AppCompatActivity implements
   private RecyclerViewAdapter mAdapter;
   // The ArrayList of Movie objects in use
   ArrayList<Movie> movieList;
+  // The ArrayList used for the favorite movies
+  ArrayList<Movie> favoriteMovieList;
+  // Constant int for requests in startActivityForResult
+  static final int UPDATE_MOVIE_FAVORITES = 1;
+  // Boolean to check if the favorites db was updated
+  boolean hasFavoritesUpdated;
+
 
   @BindView(R.id.recyclerView)
   RecyclerView recyclerView;
@@ -59,7 +75,10 @@ public class MainActivity extends AppCompatActivity implements
 
     // Setting up the RecyclerView
     recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+    // ArrayList for the movies retrieved from API
     movieList = new ArrayList<>();
+    // ArrayList of the movies retrieved from the db
+    favoriteMovieList = new ArrayList<>();
     // Setting up the adapter
     mAdapter = new RecyclerViewAdapter(this, movieList);
     mAdapter.setClickListener(this);
@@ -85,13 +104,20 @@ public class MainActivity extends AppCompatActivity implements
       if (movie_sort_pref
           .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
         apiUrl = API_QUERY_START + API_QUERY_POPULAR + API_KEY;
+        // Start loading the information in a background task
+        loaderManager.initLoader(MOVIE_LOADER_ID, null, this).forceLoad();
       } else if (movie_sort_pref
           .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
         apiUrl = API_QUERY_START + API_QUERY_TOP_RATED + API_KEY;
+        // Start loading the information in a background task
+        loaderManager.initLoader(MOVIE_LOADER_ID, null, this).forceLoad();
+      } else if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[2])) {
+        getAllFavorites();
+        mAdapter.clear();
+        mAdapter.addAll(favoriteMovieList);
+        mAdapter.notifyDataSetChanged();
       }
-      // Start loading the information in a background task
-      loaderManager.initLoader(MOVIE_LOADER_ID, null, this).forceLoad();
-
     } else {
       Toast.makeText(MainActivity.this, R.string.no_internet,
           Toast.LENGTH_LONG).show();
@@ -104,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements
     Intent startDetailsActivity = new Intent(this, DetailsActivity.class);
     startDetailsActivity.putExtra("movieDetails", movieList.get(position));
 
-    startActivity(startDetailsActivity);
+    startActivityForResult(startDetailsActivity, UPDATE_MOVIE_FAVORITES);
   }
 
   // Using the loader to get API data in a background thread.
@@ -157,21 +183,94 @@ public class MainActivity extends AppCompatActivity implements
   // Update the RecyclerView with new data if the preferences are changed
   @Override
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+
     if (s.equals(getString(R.string.pref_list_sort))) {
       movie_sort_pref = sharedPreferences
           .getString(getString(R.string.pref_list_sort), "settings_sort_entry_values");
       if (movie_sort_pref
           .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[0])) {
         apiUrl = API_QUERY_START + API_QUERY_POPULAR + API_KEY;
+        getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
       } else if (movie_sort_pref
           .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[1])) {
         apiUrl = API_QUERY_START + API_QUERY_TOP_RATED + API_KEY;
+        getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
+      } else if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[2])) {
+        getAllFavorites();
+        mAdapter.clear();
+        mAdapter.addAll(favoriteMovieList);
+        mAdapter.notifyDataSetChanged();
       }
-      getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
     }
   }
 
-  // Remember to unregister the OnSharedPreferenceChangeListener
+  // A method to query the local SQLite db for all favorite movies
+  private void getAllFavorites() {
+
+    String[] projection = {
+        _ID,
+        COLUMN_TITLE,
+        COLUMN_DESCRIPTION,
+        COLUMN_RATING,
+        COLUMN_RELEASED
+    };
+
+    String sortOrder =
+        _ID + " ASC";
+
+    Cursor cursor = getContentResolver().query(CONTENT_URI, projection, null, null, sortOrder);
+    favoriteMovieList.clear();
+
+    assert cursor != null;
+    for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+      String title = cursor.getString(cursor.getColumnIndex(COLUMN_TITLE));
+      String description = cursor
+          .getString(cursor.getColumnIndex(COLUMN_DESCRIPTION));
+      Double rating = Double
+          .parseDouble(cursor.getString(cursor.getColumnIndex(COLUMN_RATING)));
+      String released = cursor.getString(cursor.getColumnIndex(COLUMN_RELEASED));
+      int id = cursor.getInt(cursor.getColumnIndex(_ID));
+      Movie favoriteMovie = new Movie(title, description, null, rating, null, released, id);
+
+      favoriteMovieList.add(favoriteMovie);
+    }
+    cursor.close();
+  }
+
+  // Check to see if the favorites database was updated in the DetailsActivity
+  // If it was updated, refresh the RecyclerViewAdapter
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    if (requestCode == UPDATE_MOVIE_FAVORITES) {
+      // If the request was successful
+      if (resultCode == RESULT_OK) {
+        Log.i("MainActivity", "resultCode = RESULT_OK");
+        hasFavoritesUpdated = true;
+      } else {
+        hasFavoritesUpdated = false;
+      }
+    }
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+
+    if (movie_sort_pref
+        .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[2])) {
+      if (hasFavoritesUpdated) {
+        Log.i("MainActivity", "hasFavoriteUpdated = true");
+        mAdapter.clear();
+        getAllFavorites();
+        mAdapter.addAll(favoriteMovieList);
+        mAdapter.notifyDataSetChanged();
+      }
+    }
+  }
+
+  // Remember to unregister the OnSharedPreferenceChangeListener and to close the db
   @Override
   protected void onDestroy() {
     super.onDestroy();

@@ -18,10 +18,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
   private final ArrayList<Movie> movie;
   private Context mContext;
 
-  // Data is passed into the constructor
+  // ArrayList is passed into the constructor
   public RecyclerViewAdapter(Context context, @NonNull ArrayList<Movie> movie) {
     this.movie = movie;
-    this.mContext = context;
+    mContext = context;
   }
 
   // Inflates the cell layout from xml when needed

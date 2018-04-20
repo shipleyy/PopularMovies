@@ -126,7 +126,7 @@ public class MovieContentProvider extends ContentProvider {
         throw new UnsupportedOperationException("Unknown Uri " + uri);
     }
 
-    getContext().getContentResolver().notifyChange(uri, null);
+    Objects.requireNonNull(getContext()).getContentResolver().notifyChange(uri, null);
 
     return returnUri;
   }
@@ -151,7 +151,7 @@ public class MovieContentProvider extends ContentProvider {
       }
 
       if (moviesDeleted != 0) {
-      getContext().getContentResolver().notifyChange(uri, null);
+      Objects.requireNonNull(getContext()).getContentResolver().notifyChange(uri, null);
       }
 
     return moviesDeleted;

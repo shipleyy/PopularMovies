@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import example.android.com.popularmovies.R;
 import example.android.com.popularmovies.model.Movie;
@@ -26,7 +28,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
   // Inflates the cell layout from xml when needed
   @Override
-  public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+  public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     // Inflate the Layout recyclerview_item.xml
     View view = LayoutInflater.from(parent.getContext())
         .inflate(R.layout.recyclerview_item, parent, false);
@@ -35,12 +37,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
   // Binds the data to the textView and imageView in each cell
   @Override
-  public void onBindViewHolder(ViewHolder holder, int position) {
+  public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
 
     // Getting the current item from the list
     final Movie ni = movie.get(position);
 
     // Add the static start URL to the specific URL for each movie
+    // If no image loaded, show movie title instead
     Picasso.with(mContext).load(ni.getMoviePoster())
         .placeholder(R.drawable.poster_placeholder)
         .error(R.drawable.poster_placeholder)
@@ -92,8 +95,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
   // Refresh the list with current data
   public void addAll(ArrayList<Movie> movies) {
-    movie.addAll(movies);
-    notifyDataSetChanged();
+    if (movies != null) {
+      movie.addAll(movies);
+      notifyDataSetChanged();
+    }
   }
 
 }

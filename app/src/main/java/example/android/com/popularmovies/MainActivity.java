@@ -11,6 +11,7 @@ import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -71,7 +72,15 @@ public class MainActivity extends AppCompatActivity implements
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
-    int numberOfColumns = 2;
+    // Number of columns in the RecyclerView
+    // if in landscape show 3 columns, if in portrait show 2
+    int numberOfColumns;
+    Configuration config = getResources().getConfiguration();
+    if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+      numberOfColumns = 3;
+    } else {
+      numberOfColumns = 2;
+    }
 
     // Setting up the RecyclerView
     recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
@@ -121,6 +130,15 @@ public class MainActivity extends AppCompatActivity implements
     } else {
       Toast.makeText(MainActivity.this, R.string.no_internet,
           Toast.LENGTH_LONG).show();
+
+      // If no Internet, but Favorites is selected, show list of Favorites
+      if (movie_sort_pref
+          .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[2])) {
+        getAllFavorites();
+        mAdapter.clear();
+        mAdapter.addAll(favoriteMovieList);
+        mAdapter.notifyDataSetChanged();
+      }
     }
   }
 
@@ -257,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements
   @Override
   protected void onResume() {
     super.onResume();
-
     if (movie_sort_pref
         .equals(getResources().getStringArray(R.array.settings_sort_entry_values)[2])) {
       if (hasFavoritesUpdated) {

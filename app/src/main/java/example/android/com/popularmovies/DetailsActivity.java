@@ -1,6 +1,11 @@
 package example.android.com.popularmovies;
 
-import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.*;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_DESCRIPTION;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_RATING;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_RELEASED;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.COLUMN_TITLE;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.CONTENT_URI;
+import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry._ID;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -8,7 +13,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -21,7 +25,6 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import butterknife.BindView;
@@ -35,7 +38,6 @@ import com.squareup.picasso.Picasso;
 import example.android.com.popularmovies.adapter.ListViewReviewAdapter;
 import example.android.com.popularmovies.adapter.ListViewTrailerAdapter;
 import example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry;
-import example.android.com.popularmovies.database.FavoritesDbHelper;
 import example.android.com.popularmovies.model.Movie;
 import example.android.com.popularmovies.model.MovieReview;
 import example.android.com.popularmovies.model.MovieTrailer;
@@ -75,8 +77,6 @@ public class DetailsActivity extends AppCompatActivity {
   NonScrollListView trailerListview;
   @BindView(R.id.review_listview)
   NonScrollListView reviewListview;
-  @BindView(R.id.details_scrollview)
-  ScrollView detailsScrollview;
 
   // The id of the current movie
   private int movieId;
@@ -337,10 +337,10 @@ public class DetailsActivity extends AppCompatActivity {
     cv.put(COLUMN_RELEASED, movieReleased);
 
     // Sending the ContentValues to the ContentResolver to insert it in the database
-    Uri uri = getContentResolver().insert(CONTENT_URI, cv);
+    getContentResolver().insert(CONTENT_URI, cv);
 
     Intent returnIntent = new Intent();
-    setResult(Activity.RESULT_OK,returnIntent);
+    setResult(Activity.RESULT_OK, returnIntent);
   }
 
   // Remove the movie from the database
@@ -354,9 +354,10 @@ public class DetailsActivity extends AppCompatActivity {
 
     // Makes sure that the MainActivity knows that the favorites database was updated
     Intent returnIntent = new Intent();
-    setResult(Activity.RESULT_OK,returnIntent);
+    setResult(Activity.RESULT_OK, returnIntent);
 
-    Toast.makeText(getApplicationContext(), "Removed  " + movieTitle + " from the database", Toast.LENGTH_SHORT)
+    Toast.makeText(getApplicationContext(), "Removed  " + movieTitle + " from the database",
+        Toast.LENGTH_SHORT)
         .show();
   }
 

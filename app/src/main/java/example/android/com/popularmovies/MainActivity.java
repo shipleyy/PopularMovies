@@ -53,8 +53,6 @@ public class MainActivity extends AppCompatActivity implements
   public static final String MOVIE_LIST_STATE = "RESTORED_MOVIES";
   // The int that keeps track of the Y position for the RecyclerView
   private int recyclerPosition;
-  // The ArrayList that saves the movies displayed when the activity is recreated
-  private ArrayList<Movie> stateMovies;
   // The complete API URL unique for each query
   private String apiUrl;
   // The sorting preference chosen from settings

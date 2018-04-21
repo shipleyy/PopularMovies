@@ -47,6 +47,14 @@ public class MainActivity extends AppCompatActivity implements
   private static final String API_QUERY_TOP_RATED = "/top_rated?api_key=";
   // The unique API key for themoviedb.org
   private static final String API_KEY = BuildConfig.API_KEY;
+  // A constant for retrieving RecyclerView position when activity is recreated
+  private static final String RECYCLERVIEW_POSITION = "RECYCLERVIEW_POSITION";
+  // A constant for saving the list of movies when activity is recreated
+  public static final String MOVIE_LIST_STATE = "RESTORED_MOVIES";
+  // The int that keeps track of the Y position for the RecyclerView
+  private int recyclerPosition;
+  // The ArrayList that saves the movies displayed when the activity is recreated
+  private ArrayList<Movie> stateMovies;
   // The complete API URL unique for each query
   private String apiUrl;
   // The sorting preference chosen from settings
@@ -139,6 +147,19 @@ public class MainActivity extends AppCompatActivity implements
         mAdapter.addAll(favoriteMovieList);
         mAdapter.notifyDataSetChanged();
       }
+      // Check to see if the activity is being recreated
+       else if (savedInstanceState != null) {
+          // Check the savedInstanceState for the previous Y position in the RecyclerView
+          recyclerPosition = savedInstanceState.getInt(RECYCLERVIEW_POSITION, 0);
+          // If a previous position exists, go there again
+          if (recyclerPosition > 0) {
+            recyclerView.setScrollY(recyclerPosition);
+          }
+          movieList = savedInstanceState.getParcelableArrayList(MOVIE_LIST_STATE);
+          mAdapter.clear();
+          mAdapter.addAll(movieList);
+          mAdapter.notifyDataSetChanged();
+        }
     }
   }
 
@@ -254,6 +275,15 @@ public class MainActivity extends AppCompatActivity implements
       favoriteMovieList.add(favoriteMovie);
     }
     cursor.close();
+  }
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    if (recyclerView != null)
+      outState.putInt(RECYCLERVIEW_POSITION, recyclerView.getScrollY());
+    if (mAdapter != null && mAdapter.getItemCount() > 0)
+      outState.putParcelableArrayList(MOVIE_LIST_STATE, movieList);
+    super.onSaveInstanceState(outState);
   }
 
   // Check to see if the favorites database was updated in the DetailsActivity

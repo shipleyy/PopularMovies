@@ -7,8 +7,10 @@ import static example.android.com.popularmovies.database.FavoritesContract.Favor
 import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry.CONTENT_URI;
 import static example.android.com.popularmovies.database.FavoritesContract.FavoriteEntry._ID;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.AsyncQueryHandler;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -103,7 +105,11 @@ public class DetailsActivity extends AppCompatActivity {
   ArrayList<MovieTrailer> movieTrailers;
   ArrayList<MovieReview> movieReviews;
 
+  // Declaring the AsyncQueryHandler to handle the ContentProvider actions in a new thread
+  static AsyncQueryHandler queryHandler;
 
+
+  @SuppressLint("HandlerLeak")
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -135,6 +141,49 @@ public class DetailsActivity extends AppCompatActivity {
       actionBar.setDisplayHomeAsUpEnabled(true);
       actionBar.setTitle(movieTitle);
     }
+
+    // Initialize the AsyncQueryHandler
+    queryHandler = new AsyncQueryHandler(getContentResolver()) {
+      @Override
+      protected void onQueryComplete(int token, Object cookie, Cursor retCursor) {
+        cursor = retCursor;
+        assert cursor != null;
+        isFavorite = (cursor.getCount() > 0);
+        cursor.close();
+
+        // Set the favorite icon and text according to the favorite status
+        if (!isFavorite) {
+          favoriteIv.setImageResource(R.drawable.ic_favorite_not_set);
+          favoriteLabelTv.setText(R.string.details_favorite_label_add);
+        } else {
+          favoriteIv.setImageResource(R.drawable.ic_favorite_set);
+          favoriteLabelTv.setText(R.string.details_favorite_label_remove);
+        }
+      }
+
+      @Override
+      protected void onInsertComplete(int token, Object cookie, Uri uri) {
+
+        Toast.makeText(context, "Movie inserted to db with uri " + uri, Toast.LENGTH_SHORT).show();
+
+        Intent returnIntent = new Intent();
+        setResult(Activity.RESULT_OK, returnIntent);
+      }
+
+      @Override
+      protected void onDeleteComplete(int token, Object cookie, int result) {
+
+        // Makes sure that the MainActivity knows that the favorites database was updated
+        Intent returnIntent = new Intent();
+        setResult(Activity.RESULT_OK, returnIntent);
+
+        Toast.makeText(getApplicationContext(), "Removed  " + movieTitle + " from the database",
+            Toast.LENGTH_SHORT)
+            .show();
+
+
+      }
+    };
 
     // Get the movie ID from the Intent to start a new JSON query for the trailer and reviews
     movieId = selectedMovie.getMovieId();
@@ -336,11 +385,8 @@ public class DetailsActivity extends AppCompatActivity {
     cv.put(COLUMN_RATING, movieRating);
     cv.put(COLUMN_RELEASED, movieReleased);
 
-    // Sending the ContentValues to the ContentResolver to insert it in the database
-    getContentResolver().insert(CONTENT_URI, cv);
-
-    Intent returnIntent = new Intent();
-    setResult(Activity.RESULT_OK, returnIntent);
+    // Sending the ContentValues to the ContentResolver to insert it in the database in an new thread
+    queryHandler.startInsert(2, null, CONTENT_URI, cv);
   }
 
   // Remove the movie from the database
@@ -350,43 +396,17 @@ public class DetailsActivity extends AppCompatActivity {
     Uri uri = FavoriteEntry.CONTENT_URI;
     uri = uri.buildUpon().appendPath(stringId).build();
 
-    getContentResolver().delete(uri, null, null);
-
-    // Makes sure that the MainActivity knows that the favorites database was updated
-    Intent returnIntent = new Intent();
-    setResult(Activity.RESULT_OK, returnIntent);
-
-    Toast.makeText(getApplicationContext(), "Removed  " + movieTitle + " from the database",
-        Toast.LENGTH_SHORT)
-        .show();
+    // Deleting the db entry with current movie ID via the ContentProvider in a new thread.
+    queryHandler.startDelete(3, null, uri, null, null);
   }
 
   // Check to see if the movie id is already in the database and update UI accordingly
   private void checkFavoriteStatus(int movieId) {
     // Check if the current movie ID is already in the database
-    isFavorite = checkIfMovieIdExists(Integer.toString(movieId));
-
-    // Set the favorite icon and text according to the favorite status
-    if (!isFavorite) {
-      favoriteIv.setImageResource(R.drawable.ic_favorite_not_set);
-      favoriteLabelTv.setText(R.string.details_favorite_label_add);
-    } else {
-      favoriteIv.setImageResource(R.drawable.ic_favorite_set);
-      favoriteLabelTv.setText(R.string.details_favorite_label_remove);
-    }
-  }
-
-  // Check to see if the movie ID is already in the database and return true if cursor > 0
-  public boolean checkIfMovieIdExists(String movieIdString) {
-
     Uri uri = FavoriteEntry.CONTENT_URI;
-    uri = uri.buildUpon().appendPath(movieIdString).build();
+    uri = uri.buildUpon().appendPath(Integer.toString(movieId)).build();
 
-    cursor = getContentResolver().query(uri, null, null, null, null);
-
-    assert cursor != null;
-    boolean exists = (cursor.getCount() > 0);
-    cursor.close();
-    return exists;
+    // Start the query in a new thread
+    queryHandler.startQuery(1, null, uri, null, null, null, null);
   }
 }
